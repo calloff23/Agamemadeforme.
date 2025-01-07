@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stickman Runner</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: white;
+    }
+
+    #gameCanvas {
+      border: 2px solid black;
+      background: white;
+    }
+
+    #controls {
+      margin-top: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 5px;
+      cursor: pointer;
+    }
+
+    #shoutout {
+      margin-top: 20px;
+      font-size: 14px;
+      color: gray;
+    }
+  </style>
+</head>
+<body>
+  <div id="intro">
+    <h1>Stickman Runner</h1>
+    <p>Made by Ruiz from Nicolite Montessori School</p>
+    <p>Colorful and smooth gameplay awaits you!</p>
+    <button onclick="startGame()">Start Game</button>
+  </div>
+
+  <canvas id="gameCanvas" width="800" height="200" style="display: none;"></canvas>
+
+  <div id="controls" style="display: none;">
+    <button onclick="jump()">Jump</button>
+    <button onclick="slide()">Slide</button>
+  </div>
+
+  <p id="shoutout" style="display: none;">
+    Shout out to: Iyan, Martal, Toledo, Salanguit, Yohan, Luigi
+  </p>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const controls = document.getElementById('controls');
+    const intro = document.getElementById('intro');
+    const shoutout = document.getElementById('shoutout');
+    let stickman = { x: 50, y: 150, width: 20, height: 50, dy: 0, jumping: false, sliding: false };
+    let blocks = [];
+    let score = 0;
+    let gameSpeed = 2;
+    let gameOver = false;
+
+    function startGame() {
+      intro.style.display = 'none';
+      canvas.style.display = 'block';
+      controls.style.display = 'flex';
+      shoutout.style.display = 'block';
+      requestAnimationFrame(updateGame);
+    }
+
+    function jump() {
+      if (!stickman.jumping && !stickman.sliding) {
+        stickman.jumping = true;
+        stickman.dy = -10;
+      }
+    }
+
+    function slide() {
+      if (!stickman.jumping && !stickman.sliding) {
+        stickman.sliding = true;
+        stickman.height = 25;
+        setTimeout(() => {
+          stickman.height = 50;
+          stickman.sliding = false;
+        }, 500);
+      }
+    }
+
+    function drawStickman() {
+      ctx.fillStyle = 'black';
+      ctx.fillRect(stickman.x, stickman.y, stickman.width, stickman.height);
+    }
+
+    function drawBlocks() {
+      ctx.fillStyle = 'red';
+      blocks.forEach(block => {
+        ctx.fillRect(block.x, block.y, block.width, block.height);
+      });
+    }
+
+    function updateGame() {
+      if (gameOver) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Move stickman
+      if (stickman.jumping) {
+        stickman.y += stickman.dy;
+        stickman.dy += 0.5;
+        if (stickman.y >= 150) {
+          stickman.y = 150;
+          stickman.jumping = false;
+        }
+      }
+
+      // Move blocks
+      blocks.forEach(block => block.x -= gameSpeed);
+
+      // Add new blocks
+      if (blocks.length === 0 || blocks[blocks.length - 1].x < 600) {
+        blocks.push({
+          x: 800,
+          y: Math.random() > 0.5 ? 150 : 175,
+          width: 20,
+          height: Math.random() > 0.5 ? 50 : 25,
+        });
+      }
+
+      // Remove off-screen blocks
+      blocks = blocks.filter(block => block.x > -20);
+
+      // Check collisions
+      blocks.forEach(block => {
+        if (
+          stickman.x < block.x + block.width &&
+          stickman.x + stickman.width > block.x &&
+          stickman.y < block.y + block.height &&
+          stickman.y + stickman.height > block.y
+        ) {
+          gameOver = true;
+          alert('Game Over! Your score: ' + score);
+          location.reload();
+        }
+      });
+
+      // Update score and speed
+      score++;
+      if (score % 1000 === 0) gameSpeed += 0.5;
+      if (score === 1000000) {
+        gameOver = true;
+        alert('Hidden ending unlocked! Congratulations!');
+        location.reload();
+      }
+
+      // Draw everything
+      drawStickman();
+      drawBlocks();
+      ctx.fillStyle = 'black';
+      ctx.fillText('Score: ' + score, 10, 20);
+
+      requestAnimationFrame(updateGame);
+    }
+  </script>
+</body>
+</html>
